@@ -1,0 +1,43 @@
+name: Deploy private prompt library
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Require explicitly private Pages hosting
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          pages_public=$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.public')
+          if [ "$pages_public" != "false" ]; then
+            echo "::error::Pages must already be configured as private. No publication performed."
+            exit 1
+          fi
+      - run: npm run validate
+      - run: npm test
+      - name: Package site files only
+        run: |
+          mkdir -p "$RUNNER_TEMP/prompt-site"
+          cp index.html styles.css app.js core.js config.js prompts.json favicon.svg .nojekyll THIRD_PARTY_NOTICES.txt "$RUNNER_TEMP/prompt-site/"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/prompt-site
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
