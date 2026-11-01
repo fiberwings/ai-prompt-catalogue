@@ -1,5 +1,39 @@
 import { CONFIG } from "./config.js";
 
+// File URLs keep navigation in the fragment: browsers restrict history changes
+// to the query string of a local file. Hosted URLs retain their existing format.
+export function readLibraryUrl(value) {
+  const url = new URL(value);
+  const [route, ...query] = url.hash.slice(1).split("?");
+  const params = url.protocol === "file:" && query.length
+    ? new URLSearchParams(query.join("?")) : url.searchParams;
+  let promptId = null;
+  if (route.startsWith("prompt/")) {
+    try { promptId = decodeURIComponent(route.slice(7)); }
+    catch { promptId = "invalid-link"; }
+  }
+  return { params, promptId };
+}
+export function libraryUrl(value, changes = {}) {
+  const url = new URL(value), current = readLibraryUrl(value);
+  const params = new URLSearchParams(current.params);
+  if (changes.filters) {
+    for (const key of ["q", "category", "tier", "effort", "view"]) {
+      if (changes.filters[key]) params.set(key, changes.filters[key]); else params.delete(key);
+    }
+  }
+  const promptId = "promptId" in changes ? changes.promptId : current.promptId;
+  const route = promptId ? `prompt/${encodeURIComponent(promptId)}` : "";
+  if (url.protocol === "file:") url.hash = `${route}?${params}`;
+  else { url.search = params.toString(); url.hash = route; }
+  return url;
+}
+export function favouritesStorageKey(value) {
+  const url = new URL(value);
+  const path = url.protocol === "file:" ? url.pathname : new URL("./", url).pathname;
+  return `cyber-prompt-library:favourites:v1:${path}`;
+}
+
 export const normalise = value => String(value ?? "").normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
 export const effortLabel = prompt => prompt.effortLevel === "Other" ? `Other · ${prompt.otherEffortLevel}` : prompt.effortLevel;
 export const workIqLabel = prompt => prompt.copilotRequirement === "Basic" ? "Not applicable" : prompt.workIqRequired ? "Required" : "Not required";

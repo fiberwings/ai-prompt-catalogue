@@ -15,6 +15,14 @@ Checked 1 November 2026.
 
 Browser scenario fixtures were kept outside the delivered catalogue and its deployment artifact.
 
+## Standalone HTML update
+
+- `index.html` now embeds all styles, scripts, settings, catalogue data, the favicon and third-party notices. There are no module imports, JSON fetches or external assets required to run it. Only this HTML file is distributed for local use.
+- Twenty automated tests pass, including complete embedded data, classic-script syntax, safe embedding of HTML-like prompt content, source/artifact consistency, local fragment navigation, existing hosted links and favourites storage keys.
+- An isolated folder containing only `index.html` was served over localhost for browser QA. All 12 prompts rendered. Full-text search, combined filters and empty states, detail navigation and focus restoration, exact-text clipboard copying, favourites after reload, and the home link passed. No browser console errors were reported.
+- Direct `file://` browser automation was blocked by the browser tool's URL policy. Double-click launch was therefore not browser-verified; local-file URL behavior is covered by automated tests. Browser storage and clipboard restrictions still use the existing fallbacks.
+- GitHub Pages packaging includes the standalone HTML, `.nojekyll` and attribution notices. Source changes require regenerating and committing `index.html`; CI checks for stale output. Node.js remains a maintainer tool only.
+
 ## Pending external setup
 
 - Microsoft Forms opened to a sign-in flow; an authenticated organisation session was not available for creating the real form. The exact field specification, forward branching, prefilled-link defaults and acceptance trial are in microsoft-forms.md. Its URL is intentionally empty in config.js.

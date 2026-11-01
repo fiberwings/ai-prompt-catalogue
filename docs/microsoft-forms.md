@@ -104,7 +104,7 @@ No branching is needed. Leave the rating and comment blank by default.
 2. Enter the literal text `CPL_PROMPT_ID` into **Prompt ID**, and `CPL_PROMPT_TITLE` into **Prompt title**. Leave the rating and comment empty.
 3. Generate and copy the complete prefilled **response** URL. Do not use a shortened, edit, collaboration or results link. Keep the generated question identifiers intact.
 4. Paste that URL, unchanged, as the `ratingFormUrl` string in `config.js`. Keep it separate from `submissionUrl`.
-5. Run `npm run validate` and `npm test`, then test the website's rating actions in your tenant before publishing.
+5. Run `npm run build`, `npm run validate` and `npm test`, then test the website's rating actions in your tenant before publishing.
 
 The website substitutes the two marker answers in the generated URL's query parameters using the selected prompt's stable ID and title. URL encoding preserves spaces, punctuation and non-English text. It does not send the prompt text, comments or a score, and does not call a Forms submission API. The form opens in a new tab and the user submits the actual rating there.
 
@@ -132,3 +132,7 @@ The first version collects feedback only. It does not publish average scores, im
 6. Check keyboard navigation and mobile layout, then run validation before the private deployment. Keep live-form testing pending until this entire trial has passed.
 
 Microsoft references: [Rating question types](https://support.microsoft.com/en-us/forms/create-a-form-with-microsoft-forms), [generating prefilled response links](https://techcommunity.microsoft.com/blog/microsoftformsblog/pre-fill-responses-in-your-microsoft-forms/4144232), [response settings](https://support.microsoft.com/en-us/forms/adjust-your-form-or-quiz-settings-in-microsoft-forms).
+
+## Updating the standalone HTML
+
+After changing any form URL or choice list in `config.js`, run `npm run build` to embed the settings into `index.html`. Distribute that updated HTML file. These are maintainer steps; people using the library only need their browser. Forms submissions and ratings require internet access.

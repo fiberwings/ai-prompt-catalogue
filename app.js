@@ -1,5 +1,5 @@
 import { CONFIG } from "./config.js";
-import { filterPrompts, effortLabel, workIqLabel, validateCatalogue, formUrl, safeHttpsUrl, ratingFormUrl, createFavouritesStore } from "./core.js";
+import { filterPrompts, effortLabel, workIqLabel, validateCatalogue, formUrl, safeHttpsUrl, ratingFormUrl, createFavouritesStore, readLibraryUrl, libraryUrl, favouritesStorageKey } from "./core.js";
 
 const $ = selector => document.querySelector(selector);
 const paths = {
@@ -22,7 +22,7 @@ function icon(name) { const svg = document.createElementNS("http://www.w3.org/20
 function el(tag, className, text) { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; }
 const categoryIcon = category => ["shield", "pulse", "globe", "target", "code", "document"][CONFIG.categories.indexOf(category)] || "grid";
 let prompts = [], loaded = false, selectedId = null, returnFocus = null, returnFocusId = null, toastTimer;
-const favouritesKey = `cyber-prompt-library:favourites:v1:${new URL("./", import.meta.url).pathname}`;
+const favouritesKey = favouritesStorageKey(location.href);
 const favourites = createFavouritesStore(() => window.localStorage, favouritesKey);
 let state = { query: "", category: "", tier: "", effort: "", view: "" };
 const dialog = $("#prompt-dialog");
@@ -35,7 +35,7 @@ const submissionUrl = formUrl(CONFIG.submissionUrl);
 if (submissionUrl) { $("#submit-link").href = submissionUrl; $("#submit-link").hidden = false; $("#submission-pending").hidden = true; }
 
 function readState() {
-  const params = new URL(location.href).searchParams;
+  const { params } = readLibraryUrl(location.href);
   state = {
     query: params.get("q") || "",
     category: params.get("view") !== "favourites" && CONFIG.categories.includes(params.get("category")) ? params.get("category") : "",
@@ -46,14 +46,19 @@ function readState() {
   $("#search").value = state.query; $("#tier").value = state.tier; $("#effort").value = state.effort;
 }
 function saveState() {
-  const url = new URL(location.href);
-  for (const [key, value] of Object.entries({ q: state.query, category: state.category, tier: state.tier, effort: state.effort, view: state.view })) {
-    if (value) url.searchParams.set(key, value); else url.searchParams.delete(key);
-  }
+  const url = libraryUrl(location.href, { filters: { q: state.query, category: state.category, tier: state.tier, effort: state.effort, view: state.view } });
   history.replaceState(history.state, "", url);
 }
 function updateState(changes) { Object.assign(state, changes); saveState(); render(); }
 function resetFilters() { state = { query: "", category: "", tier: "", effort: "", view: "" }; saveState(); readState(); render(); $("#search").focus(); }
+$(".skip-link").addEventListener("click", event => { event.preventDefault(); $("#search").focus(); });
+$(".brand").href = libraryUrl(location.href, { filters: {}, promptId: null });
+$(".brand").addEventListener("click", event => {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  history.replaceState({}, "", libraryUrl(location.href, { filters: {}, promptId: null }));
+  readState(); render(); syncDetail(); $("#search").focus();
+});
 $("#search").addEventListener("input", event => updateState({ query: event.target.value }));
 $("#tier").addEventListener("change", event => updateState({ tier: event.target.value }));
 $("#effort").addEventListener("change", event => updateState({ effort: event.target.value }));
@@ -163,7 +168,7 @@ function card(prompt) {
   category.append(icon(categoryIcon(prompt.category)), document.createTextNode(prompt.category));
   top.append(category, favouriteButton(prompt));
   const title = el("h3", "card-title"), link = el("a", "", prompt.title);
-  link.href = `#prompt/${encodeURIComponent(prompt.id)}`;
+  link.href = libraryUrl(location.href, { promptId: prompt.id });
   link.addEventListener("click", event => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault(); returnFocus = link; returnFocusId = prompt.id;
@@ -264,15 +269,17 @@ function detail(prompt) {
     sources.append(list); content.append(sources);
   }
   content.append(el("p", "validation-note", prompt.validationStatus === "Awaiting internal validation" ? "Adapted starter template · Awaiting internal validation. Supply the bracketed inputs and review the result in your own environment." : "Internally validated template. Review results for your current task and context."));
-  const bottom = el("div", "detail-bottom"), share = el("button", "button button-outline", "Copy link ↗");
+  const local = location.protocol === "file:";
+  const bottom = el("div", "detail-bottom"), share = el("button", "button button-outline", local ? "Copy local link ↗" : "Copy link ↗");
+  if (local) share.title = "This link points to the HTML file on this device. Share the HTML file itself with other people.";
   share.addEventListener("click", async () => {
-    const url = new URL(location.href); url.search = "";
-    try { await navigator.clipboard.writeText(url.href); showToast("Prompt link copied."); }
+    const url = libraryUrl(location.href, { filters: {} });
+    try { await navigator.clipboard.writeText(url.href); showToast(local ? "Local prompt link copied. Works on this device." : "Prompt link copied."); }
     catch { $("#manual-copy").value = url.href; if (!copyDialog.open) copyDialog.showModal(); $("#manual-copy").focus(); $("#manual-copy").select(); }
   });
   bottom.append(el("small", "", `Reference: ${prompt.id}`), share); content.append(bottom);
 }
-function requestedId() { try { return location.hash.startsWith("#prompt/") ? decodeURIComponent(location.hash.slice(8)) : null; } catch { return "invalid-link"; } }
+function requestedId() { return readLibraryUrl(location.href).promptId; }
 function syncDetail() {
   if (!loaded) return;
   const id = requestedId();
@@ -280,7 +287,7 @@ function syncDetail() {
     selectedId = null;
     if (dialog.open) {
       dialog.close();
-      const restored = returnFocus?.isConnected ? returnFocus : [...document.querySelectorAll(".card-title a")].find(link => link.hash === `#prompt/${returnFocusId}`);
+      const restored = returnFocus?.isConnected ? returnFocus : [...document.querySelectorAll(".card-title a")].find(link => readLibraryUrl(link.href).promptId === returnFocusId);
       (restored || $("#search")).focus();
     }
     return;
@@ -294,21 +301,25 @@ function syncDetail() {
 }
 function closeDetail() {
   if (history.state?.promptEntry) history.back();
-  else { const url = new URL(location.href); url.hash = ""; history.replaceState({}, "", url); syncDetail(); }
+  else { history.replaceState({}, "", libraryUrl(location.href, { promptId: null })); syncDetail(); }
 }
 $("#close-detail").addEventListener("click", closeDetail);
 dialog.addEventListener("cancel", event => { event.preventDefault(); closeDetail(); });
 dialog.addEventListener("click", event => { if (event.target === dialog && event.clientX < dialog.getBoundingClientRect().left) closeDetail(); });
-window.addEventListener("popstate", () => { readState(); render(); syncDetail(); });
-window.addEventListener("hashchange", syncDetail);
+function navigate() {
+  const previous = JSON.stringify(state);
+  readState();
+  if (JSON.stringify(state) !== previous) render();
+  syncDetail();
+}
+window.addEventListener("popstate", navigate);
+window.addEventListener("hashchange", navigate);
 
-async function load() {
+function load() {
   loaded = false; $("#results").setAttribute("aria-busy", "true"); $("#result-count").textContent = "Loading collection…";
   $("#results").replaceChildren(stateBox("Opening the collection", "Your next starting point is on its way."));
   try {
-    const response = await fetch(new URL("./prompts.json", import.meta.url));
-    if (!response.ok) throw new Error(`Catalogue request failed (${response.status}).`);
-    const data = await response.json(), errors = validateCatalogue(data);
+    const data = JSON.parse($("#catalogue-data").textContent), errors = validateCatalogue(data);
     if (errors.length) throw new Error(errors.join("\n"));
     prompts = data; loaded = true;
     $("#total-prompts").textContent = String(prompts.length).padStart(2, "0");

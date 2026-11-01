@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="A considered collection of reusable cybersecurity prompts for your AI.">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Cyber Prompt Library</title>
+  <link rel="icon" href="{{FAVICON}}" type="image/svg+xml">
+  <style>{{STYLES}}</style>
+</head>
+<body>
+  <a class="skip-link" href="#search">Skip to prompt search</a>
+  <div class="shell">
+    <header class="site-header">
+      <a href="#" class="brand" aria-label="Cyber Prompt Library home">
+        <span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" focusable="false"><rect width="64" height="64" rx="5" fill="#C8AA72"/><text x="32" y="39.5" text-anchor="middle" fill="#14181C" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" letter-spacing="0.5">CPL</text></svg></span>
+        <span><strong>Cyber Prompt Library</strong></span>
+      </a>
+      <div class="header-actions">
+        <a id="submit-link" class="button button-outline" hidden target="_blank" rel="noopener noreferrer">Submit a prompt <span aria-hidden="true">↗</span></a>
+        <div id="submission-pending" class="submission-pending"><button class="button button-outline" disabled>Submit a prompt <span aria-hidden="true">↗</span></button><span>Submissions opening soon</span></div>
+      </div>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy"><p class="eyebrow"><span class="short-rule"></span> LESS STARTING FROM SCRATCH</p>
+          <h1 id="hero-title">Good prompts.<br><em>Better security work.</em></h1>
+          <p class="hero-description">A practical collection for the work you do.<br>Find your starting point. Copy it. Put it to work.</p>
+        </div>
+        <aside class="collection-note" aria-label="About this collection"><p>From the first signal<br>to the final report.</p><div class="collection-stats"><div><strong id="total-prompts">—</strong><span>reusable prompts</span></div><div><strong id="total-categories">06</strong><span>security disciplines</span></div></div></aside>
+      </section>
+      <section class="catalogue" aria-label="Prompt catalogue">
+        <aside class="sidebar"><h2 class="section-label">EXPLORE BY TASK</h2><nav id="categories" class="category-list" aria-label="Prompt categories"></nav><div class="sidebar-note"><span class="note-mark" aria-hidden="true">↗</span><h3>A starting point,<br>not a blank page.</h3><p>Copy a prompt, replace its bracketed placeholders and paste it into your AI.</p></div></aside>
+        <div class="results-column">
+          <div class="search-box"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><label class="sr-only" for="search">Search every prompt field</label><input id="search" type="search" placeholder="Search prompts, topics, authors or keywords…" autocomplete="off" spellcheck="false" aria-describedby="search-hint"><kbd aria-hidden="true">/</kbd></div>
+          <div class="filter-bar"><p id="search-hint">Search the entire collection, down to the last word.</p><div class="select-filters"><label for="tier">Copilot<select id="tier"><option value="">All plans</option></select></label><label for="effort">Effort<select id="effort"><option value="">All levels</option></select></label></div></div>
+          <div id="active-filters" class="active-filters" hidden></div>
+          <div class="results-heading"><h2 id="results-title">All prompts</h2><span id="result-count" role="status" aria-live="polite">Loading collection…</span></div>
+          <p id="favourites-note" class="favourites-note" hidden></p>
+          <div id="results" class="prompt-grid" aria-busy="true"><div class="state-box"><span class="loading-mark" aria-hidden="true"></span><h3>Opening the collection</h3><p>Your next starting point is on its way.</p></div></div>
+          <noscript><p class="state-box">Enable JavaScript to search and browse this prompt collection.</p></noscript>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer"><span>Cyber Prompt Library <span class="footer-divider">/</span> Built for better everyday work.</span><span>Curated starting points. Human judgement.</span></footer>
+  </div>
+  <dialog id="prompt-dialog" class="prompt-dialog" aria-labelledby="detail-title"><div class="dialog-top"><span class="section-label">PROMPT DETAILS</span><button id="close-detail" class="icon-button" aria-label="Close prompt details">✕</button></div><div id="detail-content"></div></dialog>
+  <dialog id="copy-dialog" class="copy-dialog" aria-labelledby="copy-title"><div class="dialog-top"><h2 id="copy-title">Copy this prompt</h2><button id="close-copy" class="icon-button" aria-label="Close manual copy">✕</button></div><p>Clipboard access is unavailable. Select the text below and copy it with your keyboard or device menu.</p><label class="sr-only" for="manual-copy">Prompt text to copy</label><textarea id="manual-copy" readonly></textarea><button id="select-copy" class="button button-brass">Select all text</button></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script id="catalogue-data" type="application/json">{{CATALOGUE}}</script>
+  <script id="third-party-notices" type="application/json">{{NOTICES}}</script>
+  <script>{{APP}}</script>
+</body>
+</html>

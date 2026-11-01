@@ -34,7 +34,7 @@ jobs:
       - name: Package site files only
         run: |
           mkdir -p "$RUNNER_TEMP/prompt-site"
-          cp index.html styles.css app.js core.js config.js prompts.json favicon.svg .nojekyll THIRD_PARTY_NOTICES.txt "$RUNNER_TEMP/prompt-site/"
+          cp index.html .nojekyll THIRD_PARTY_NOTICES.txt "$RUNNER_TEMP/prompt-site/"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ runner.temp }}/prompt-site
